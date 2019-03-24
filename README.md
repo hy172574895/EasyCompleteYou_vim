@@ -1,3 +1,4 @@
+> this aready become a legacy repo. please see python version instead
 # Easy Complete You (ECY)
 ECY trying to stasify you all the time or piss you off sometimes.
 let get to the straight, here the disavantages:

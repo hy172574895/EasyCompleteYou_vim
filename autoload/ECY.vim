@@ -57,7 +57,7 @@ let s:waitting_completion_position={}
 let s:WorkspaceClientCapabilities={  "applyEdit":v:true,  "workspaceEdit":{    "documentChanges":v:true,    "resourceOperations":[      "Create",      "Rename",      "Delete"    ],    "failureHandling":[      "Abort"    ]  },  "didChangeConfiguration":{    "dynamicRegistration":v:false  },  "didChangeWatchedFiles":v:false,  "symbol":{    "dynamicRegistration":v:false,    "symbolKind":{      "valueSet":[]    }  },  "executeCommand":{    "dynamicRegistration":v:false  },  "workspaceFolders":v:true,  "configuration":v:true}
 let s:TextDocumentClientCapabilities={  "synchronization":{    "dynamicRegistration":v:false,    "willSave":v:false,    "willSaveWaitUntil":v:false,    "didSave":v:false  },  "completion":{    "dynamicRegistration":v:false,    "completionItem":{      "snippetSupport":v:true,      "commitCharactersSupport":v:true,      "documentationFormat":[],      "deprecatedSupport":v:true,      "preselectSupport":v:true    },    "completionItemKind":{      "valueSet":[]    },    "contextSupport":v:true  },  "hover":{    "dynamicRegistration":v:false,    "contentFormat":[]  },  "signatrueHelp":{    "dynamicRegistration":v:false,    "signatrueInformation":{      "documentationFormat":[],      "parameterInformation":{        "labelOffsetSupport":v:false      }    }  },  "references":{    "dynamicRegistration":v:true  },  "documentHighlight":{    "dynamicRegistration":v:true  },  "documentSymbol":{    "dynamicRegistration":v:true,    "symbolKind":{      "valueSet":[]    },    "hierarchicalDocumentSymbolSupport":v:true  },  "formatting":{    "dynamicRegistration":v:true  },  "rangeFormatting":{    "dynamicRegistration":v:true  },  "onTypeFormatting":{    "dynamicRegistration":v:true  },  "declaration":{    "dynamicRegistration":v:true,    "linkSupport":v:true,  },  "definition":{    "dynamicRegistration":v:true,    "linkSupport":v:true,  },  "typeDefinition":{    "dynamicRegistration":v:true,    "linkSupport":v:true,  },  "implementation":{    "dynamicRegistration":v:true,    "linkSupport":v:true,  },  "codeAction":{    "dynamicRegistration":v:true,    "codeActionLiteralSupport":{      "codeActionKind":{        "valueSet":[]      }    }  },  "codeLens":{    "dynamicRegistration":v:true  },  "documentLink":{    "dynamicRegistration":v:true  },  "colorProvider":{    "dynamicRegistration":v:true  },  "rename":{    "dynamicRegistration":v:true,    "prepareSupport":v:true,  },  "publishDiagnostics":{    "relatedInformation":v:true  },  "foldingRange":{    "dynamicRegistration":v:true,    "rangeLimit":v:true,    "lineFoldingOnly":v:true  }}
 
-augroup youcompleteme
+augroup EasyCompleteYou
   autocmd!
   " autocmd FileType * call s:OnFileTypeSet()
   autocmd BufEnter *     call s:OnBufferEnter()
@@ -76,8 +76,8 @@ function! GetACharacterFromCurrenBufferOnInsertMode() abort
   if len(l:line_string)>1000
     return
   endif
-  let l:line_list = split(l:line_string, '\zs') 
-  if col('.')==1
+  let l:line_list  = split(l:line_string, '\zs')
+  if col('.')     == 1
     return ''
   else
     return get(l:line_list, col('.')-2, '') 
@@ -89,8 +89,8 @@ function! GetCharacterFromCurrenBufer(line,colum) abort
   if len(l:line_string)>1000 || l:line_string==''
     return
   endif
-  let l:line_list = split(l:line_string, '\zs') 
-  if a:colum==1
+  let l:line_list  = split(l:line_string, '\zs')
+  if a:colum      == 1
     return ''
   else
     return get(l:line_list, col('.')-2, '') 
@@ -116,8 +116,8 @@ function! s:OnTextChangedInsertMode() abort
         if l:insertText=~'\W' || col('.') - 1<value['position']['character']
           call s:RefleshCompletion(l:bufNr)
         else
-          if (has_key(value,'sortText')?(value['sortText']!=l:insertText):1)
-            let g:available_completion[job_id]['sortText']=l:insertText
+          if (has_key(value,'sortText')?(value['sortText'] != l:insertText):1)
+            let g:available_completion[job_id]['sortText']  = l:insertText
             call LSP_log(l:insertText)
             if has_key(value,'CacheID')
               call s:InvokeFuzzyMatch(value['request_id'],
@@ -126,7 +126,6 @@ function! s:OnTextChangedInsertMode() abort
           endif
         endif
 
-        " calling flitter
       else
         call s:RefleshCompletion(l:bufNr)
       endif
@@ -183,6 +182,7 @@ function! s:OnBufferEnter() abort
           let l:ClientCapability={'workspace':s:WorkspaceClientCapabilities,
                 \'textDocument':s:TextDocumentClientCapabilities}
           let l:job_id= LSP_StartServer({'name':key1,
+                \'rootUri':LSP_path_to_uri(expand('%:p:h')),
                 \'ClientCapabilities':l:ClientCapability},
                 \{'user_callback':function('g:StartServer_cb')})
           let l:bufNr=bufnr('%')
@@ -237,9 +237,18 @@ function! s:KillAllLSPServer(bufNr) abort
 "}}}
 endfunction
 
+function! s:CleanUnusedServer(bufNr,timer) abort
+"{{{
+  if bufnr('%')!=a:bufNr
+    call s:KillAllLSPServer(a:bufNr)
+  endif
+"}}}
+endfunction
+
 function! s:OnBufferLeave() abort
 "{{{
   call s:KillAllLSPServer(bufnr('%'))
+  " call timer_start(10000, function('s:CleanUnusedServer', [bufnr('%')]))
 "}}}
 endfunction
 
@@ -291,7 +300,7 @@ endfunction
 
 function! s:RefleshCompletion(bufNr) abort
 "{{{
-  let l:line = getline('.')
+  let l:line  = getline('.')
   let l:start = col('.') - 1
   while l:start > 0 && l:line[l:start - 1] =~ '\a'
     let l:start -= 1
@@ -313,8 +322,8 @@ function! g:ReadyToComplete_cb(server_job_id,results) abort
   " the results return 'time out' if time out.
   if g:running_fuzzy_find_job_id!=0
     
-    let l:results_string=json_encode(a:results)
-    let l:msg="|".string(len(l:results_string)).l:results_string
+    let l:results_string = json_encode(a:results)
+    let l:msg            = "|".string(len(l:results_string)).l:results_string
     call LSP_log(l:msg)
     call async#job#send(g:running_fuzzy_find_job_id,l:msg)
     " if g:available_completion contain request_id is means aready send the 
@@ -338,7 +347,7 @@ function! g:StartServer_cb(server_job_id,results) abort
   else
     call LSP_DidOpenNotification(a:server_job_id,{'uri':
           \LSP_path_to_uri(s:CurrenBufferPath()),'languageId':
-          \'python','text':Get_text_document_text(bufnr('%'))})
+          \&filetype,'text':Get_text_document_text(bufnr('%'))})
   endif
   echo 'Started server successfully.'
   "}}}
@@ -346,8 +355,8 @@ endfunction
 
 function! s:FuzzyFind_cb(job_id,results,envent) 
   "{{{
-  let l:response_msg =join(a:results,"\n")
-  if l:response_msg=="\n"
+  let l:response_msg  = join(a:results,"\n")
+  if l:response_msg  == "\n"
     return
   endif
 
@@ -419,11 +428,17 @@ function! EasyCompleteCompleteFunc( findstart, base )
   for [job_id,value] in items(g:available_completion)
     if has_key(value,'items') && value['Is_empty']!=1
       for value2 in value['items']
-        let l:temp={}
-        let l:temp['word']=value2['InsertText']
-          let l:temp['abbr']=value2['Label']
-        let l:temp['info']=value2['Documentation']
-        let l:temp['menu']=s:GetItemKind(value2['Kind'])
+        let l:temp         = {}
+        let l:temp['word'] = value2['InsertText']
+        if l:temp['word']==''
+          let l:temp['word'] = value2['Label']
+      else
+        let l:temp['abbr'] = value2['Label']
+        endif
+        let l:temp['info'] = value2['Detail']
+        " every server has different situation
+        " let l:temp['menu'] = value2['Detail']
+        let l:temp['kind'] = s:GetItemKind(value2['Kind'])
         call add(l:items_list['words'], l:temp)
       endfor
     endif
@@ -521,8 +536,8 @@ endfunction
 
 function! s:CurrenBufferPath(...) abort
   "{{{
-  let file = a:0 ? a:1 : @%
-  if file =~# '^\a\a\+:' || a:0 > 1
+  let file   = a:0 ? a:1 : @%
+  if file  =~# '^\a\a\+:' || a:0 > 1
     return call('CurrenBufferPath', [file] + a:000[1:-1])
   elseif file =~# '^/\|^\a:\|^$'
     return file

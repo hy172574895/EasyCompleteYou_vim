@@ -55,10 +55,10 @@ endfunction
 function! s:LSP_InitalizeResponseHandle(server_job_id,results) abort
   let g:LSP_running_servers_job_id[a:server_job_id]['ServerCapabilities']=
         \a:results['result']['capabilities']
-  let l:Job_info=g:LSP_running_servers_job_id[a:server_job_id]
-  let l:Job_info_callback=l:Job_info['request_queue']
+  let l:Job_info           = g:LSP_running_servers_job_id[a:server_job_id]
+  let l:Job_info_callback  = l:Job_info['request_queue']
         \[a:results['id']]['callback']['user_callback']
-  if l:Job_info_callback!=''
+  if l:Job_info_callback  != ''
     call l:Job_info_callback(a:server_job_id,a:results)
   endif
   " call LSP_DidOpenNotification(a:server_job_id,{'uri':LSP_path_to_uri('C:\Users\qwe\Desktop\my\practice\Code\python\main.py'),'languageId':'python','text':s:get_text_document_text(bufnr('%'))})
@@ -76,20 +76,20 @@ function! s:get_prefix(path) abort
   return matchstr(a:path, '\(^\w\+::\|^\w\+://\)')
 endfunction
 function! s:encode_uri(path, start_pos_encode, default_prefix) abort
-  let l:prefix = s:get_prefix(a:path)
-  let l:path = a:path[len(l:prefix):]
+  let l:prefix      = s:get_prefix(a:path)
+  let l:path        = a:path[len(l:prefix):]
   if len(l:prefix) == 0
-    let l:prefix = a:default_prefix
+    let l:prefix    = a:default_prefix
   endif
 
   let l:result = strpart(a:path, 0, a:start_pos_encode)
 
   for i in range(a:start_pos_encode, len(l:path) - 1)
     " Don't encode '/' here, `path` is expected to be a valid path.
-    if l:path[i] =~# '^[a-zA-Z0-9_.~/-]$'
-      let l:result .= l:path[i]
+    if l:path[i]   =~# '^[a-zA-Z0-9_.~/-]$'
+      let l:result  .= l:path[i]
     else
-      let l:result .= s:urlencode_char(l:path[i])
+      let l:result  .= s:urlencode_char(l:path[i])
     endif
   endfor
 
@@ -103,9 +103,9 @@ if has('win32') || has('win64')
     else
       " You must not encode the volume information on the path if
       " present
-      let l:end_pos_volume = matchstrpos(a:path, '\c[A-Z]:')[2]
-      if l:end_pos_volume == -1
-        let l:end_pos_volume = 0
+      let l:end_pos_volume    = matchstrpos(a:path, '\c[A-Z]:')[2]
+      if l:end_pos_volume    == -1
+        let l:end_pos_volume  = 0
       endif
       return s:encode_uri(substitute(a:path, '\', '/', 'g'), 
             \l:end_pos_volume, 'file:///')
@@ -139,8 +139,8 @@ endif
 function! s:get_content_length(headers) abort
   "{{{
   for l:header in split(a:headers, "\r\n")
-    let l:kvp = split(l:header, ':')
-    if len(l:kvp) == 2
+    let l:kvp       = split(l:header, ':')
+    if len(l:kvp)  == 2
       if l:kvp[0] =~? '^Content-Length'
         return str2nr(l:kvp[1], 10)
       endif
@@ -178,11 +178,11 @@ function! s:LSP_OnStdout(server_job_id, data, event) abort
     let g:LSP_responMsg[a:server_job_id]={}
   endif
   " a:data is a list, using join func to make it in string
-  let l:response_msg =join(a:data,"\n")
+  let l:response_msg           = join(a:data,"\n")
   for [key,value] in items(g:LSP_responMsg[a:server_job_id])
-    let l:left_content_length=g:LSP_responMsg
+    let l:left_content_length  = g:LSP_responMsg
           \[a:server_job_id][key]['left']
-    if l:left_content_length!=0 && l:response_msg!=''
+    if l:left_content_length  != 0 && l:response_msg!=''
       let g:LSP_responMsg[a:server_job_id][key]['content'].=
             \l:response_msg[:l:left_content_length]
       let g:LSP_responMsg
@@ -197,7 +197,7 @@ function! s:LSP_OnStdout(server_job_id, data, event) abort
   while 1 
     let l:header_end_index  = stridx(l:response_msg, "\r\n\r\n")
     if !(l:response_msg    =~ 'Content-Length:') || l:header_end_index < 0
-      let l:log_message   = 'E010:no headers found(or an unkonw erro)'
+      let l:log_message     = 'E010:no headers found(or an unkonw erro)'
       call LSP_log(l:log_message)
       break
     else 
@@ -209,22 +209,22 @@ function! s:LSP_OnStdout(server_job_id, data, event) abort
       let g:LSP_responMsg[a:server_job_id][l:sequence]={}
       let g:LSP_responMsg[a:server_job_id][l:sequence]['Length']=
             \l:content_length
-      let l:left_content_length = l:content_length-len(l:content_string)
+      let l:left_content_length   = l:content_length-len(l:content_string)
 
       if l:left_content_length>0 
         "There are incomplete responMsg 
-        let l:response_msg    = ''
+        let l:response_msg        = ''
       elseif l:left_content_length<0
         " there are more than one response
-        let l:content_string  = l:response_msg
+        let l:content_string      = l:response_msg
               \[l:header_end_index + 4:
               \l:header_end_index + 3+l:content_length]
-        let l:response_msg    = l:response_msg
+        let l:response_msg        = l:response_msg
               \[l:header_end_index+l:content_length+4:]
-        let l:left_content_length =0 
+        let l:left_content_length = 0
       else
         " a complete and pure response
-        let l:response_msg    = ''
+        let l:response_msg        = ''
       endif
       " try
       "   let l:content_json=json_decode(l:content_string)
@@ -240,35 +240,34 @@ function! s:LSP_OnStdout(server_job_id, data, event) abort
     endif
   endwhile
   for [key,value] in items(g:LSP_responMsg[a:server_job_id])
-    let l:left_content_length=g:LSP_responMsg
+    let l:left_content_length  = g:LSP_responMsg
           \[a:server_job_id][key]['left']
-    if l:left_content_length==0
-      let l:content_string=
+    if l:left_content_length  == 0
+      let l:content_string     =
             \g:LSP_responMsg[a:server_job_id][key]['content']
       try
-        let l:content_json=json_decode(l:content_string)
+        let l:content_json     = json_decode(l:content_string)
       catch
         call LSP_log('failed to parse:'.l:content_string)
       endtry
       call LSP_log('handling:'.l:content_string)
       let l:Job_info=g:LSP_running_servers_job_id[a:server_job_id]
-      if has_key(l:content_json,'id')
-        " a request 
+      if has_key(l:content_json,'id') && 
+            \has_key(l:Job_info['request_queue'],l:content_json['id'])
+        " a request respone from server
         call LSP_log('handling id:'.l:content_json['id'])
         let l:Job_info_callback=l:Job_info['request_queue']
               \[l:content_json['id']]['callback']
-        if has_key(l:Job_info['request_queue'],l:content_json['id'])&& 
-              \!(has_key(l:Job_info_callback,'called'))
-
+        if !(has_key(l:Job_info_callback,'called') )
           let g:LSP_running_servers_job_id[a:server_job_id]
                 \['request_queue'][l:content_json['id']]['callback']
-                \['called']=1
-          let l:Callback=l:Job_info_callback['on_stdout']
-          if l:Callback!=v:null
+                \['called']  = 1
+          let l:Callback     = l:Job_info_callback['on_stdout']
+          if l:Callback     != v:null
             call l:Callback(a:server_job_id,l:content_json)
           else
-            let l:Callback=l:Job_info_callback['user_callback']
-            if l:Callback!=v:null
+            let l:Callback   = l:Job_info_callback['user_callback']
+            if l:Callback   != v:null
               call l:Callback(a:server_job_id,l:content_json)
             endif
           endif
@@ -280,7 +279,7 @@ function! s:LSP_OnStdout(server_job_id, data, event) abort
 
         endif
       else
-        " a notification
+        " a notification or a request sent from server
 
       endif
     endif
@@ -308,7 +307,7 @@ function! s:SendRequest(server_job_id, opts,callback) abort
   "             \'method':'initialize'}
   "             \}
   "             \}}
-  let l:request_id=g:LSP_running_servers_job_id[a:server_job_id]
+  let l:request_id            = g:LSP_running_servers_job_id[a:server_job_id]
         \['request_sequence'] + 1
   let g:LSP_running_servers_job_id[a:server_job_id]
         \['request_sequence'] = l:request_id
@@ -346,12 +345,12 @@ function! s:TimeOutHandler(timer_id) abort
       let l:Job_info_callback=value2['callback']
 
       if !has_key(l:Job_info_callback,'called')
-        let l:Job_info_callback['called']=2
-        if l:Job_info_callback['on_stdout']!=''
+        let l:Job_info_callback['called']          = 2
+        if l:Job_info_callback['on_stdout']       != ''
           call LSP_log(string(key2).'timeout, job_id:'.string(key1))
           call l:Job_info_callback['on_stdout'](key1,'Time_out')
         else
-          if l:Job_info_callback['user_callback']!=''
+          if l:Job_info_callback['user_callback'] != ''
             call l:Job_info_callback['user_callback']
                   \(key1,'Time_out')
             call LSP_log(string(key2).'timeout, job_id:'.string(key1))
@@ -437,22 +436,22 @@ function! LSP_InitializeRequest(server_job_id, opts,callback,capability) abort
 endfunction
 function! LSP_DocumentSymbolsRequest(server_job_id, opts,callback) abort
   "{{{
-  let l:opts=s:DicInit({'uri':'0'},a:opts)
-  if string( l:opts )==""
+  let l:opts           = s:DicInit({'uri':'0'},a:opts)
+  if string( l:opts ) == ""
     return 'E001:Not enough parameters.'
   endif
-  let l:params={'textDocument':{'uri':l:opts['uri']}}
-  let l:msg={'method':'textDocument/documentSymbol','params': l:params}
+  let l:params = {'textDocument':{'uri':l:opts['uri']}}
+  let l:msg    = {'method':'textDocument/documentSymbol','params': l:params}
   call s:SendRequest(a:server_job_id,l:msg,a:callback)
   "}}}
 endfunction
 function! LSP_DidChangeConfigurationNotification(server_job_id, opts) abort
   "{{{
-  let l:opts=s:DicInit({'settings':'0'},a:opts)
-  if string(l:opts)==""
+  let l:opts         = s:DicInit({'settings':'0'},a:opts)
+  if string(l:opts) == ""
     return 'E001:Not enough parameters.'
   endif
-  let l:params={'method':'initialize','params': l:opts }
+  let l:params       = {'method':'initialize','params': l:opts }
   call s:SendNotification(a:server_job_id,l:params)
   "}}}
 endfunction
@@ -465,8 +464,8 @@ function! LSP_DidChangeWorkspaceFoldersNotification(server_job_id, opts) abort
   if string(l:opts)==""
     return 'E001:Not enough parameters.'
   endif
-  let l:addWorkspaceFolder={'uri':l:opts['uri'],'name':l:opts['addName']}
-  let l:removedWorkspaceFolder={'uri':l:opts['uri'],
+  let l:addWorkspaceFolder     = {'uri':l:opts['uri'],'name':l:opts['addName']}
+  let l:removedWorkspaceFolder = {'uri':l:opts['uri'],
         \'name':l:opts['removeName']}
   let l:params={'method':'initialize','params': {'added':l:addWorkspaceFolder,
         \'removed':l:removedWorkspaceFolder} }
@@ -501,14 +500,19 @@ function! LSP_DidChangeNotification(server_job_id, opts) abort
   if string(l:opts)==""
     return 'E001:Not enough parameters.'
   endif
+  " the range and rangelength should be omitted in vim, we have no idea how to 
+  " calculate the different text in vim. If so it would be too slow to
+  " calculate.
+  "
   let l:content_changes={'range':l:opts['range'],
-        \'rangeLength':l:opts['rangeLength'],
-        \'text':l:opts['text']}
+        \'rangeLength': l:opts['rangeLength'],
+        \'text':        l:opts['text']}
+  " let l:content_changes={'text':l:opts['text']}
   let l:VersionedTextDocumentIdentifier={'textDocument':
-        \{'uri':l:opts['opts']},
-        \'version':l:opts['version'],
-        \'position':l:opts['position']}
-  let l:params={'contentChanges':l:content_changes,
+        \{'uri':     l:opts['uri']},
+        \'version':  l:opts['version'],
+        \'position': l:opts['position']}
+  let l:params={'contentChanges':[l:content_changes],
         \'textDocument':l:VersionedTextDocumentIdentifier}
   let l:msg={'method':'textDocument/didChange','params':l:params}
   call s:SendNotification(a:server_job_id,l:msg)
@@ -528,6 +532,7 @@ function! LSP_CompleteRequest(server_job_id,opts,callback) abort
   let l:msg={'method':'textDocument/completion','params': l:params }
   call s:SendRequest(a:server_job_id,l:msg,a:callback)
 endfunction
+
 function! LSP_DidOpenNotification(server_job_id, opts) abort
   "{{{
   let l:opts=s:DicInit({'uri':'0','languageId':'0',
@@ -543,6 +548,7 @@ function! LSP_DidOpenNotification(server_job_id, opts) abort
   call s:SendNotification(a:server_job_id,l:msg)
   "}}}
 endfunction
+
 function! LSP_DidCloseNotification(server_job_id, opts) abort
   "{{{
   let l:opts=s:DicInit({'uri':'0'},a:opts)
@@ -564,7 +570,7 @@ function! KillServer(server_job_id,callback)
   "{{{
   "return 1 if with erro, otherwise is 0.
   "there is no options
-  call async#job#stop(a:server_job_id)
+  call  async#job#stop(a:server_job_id)
   unlet g:LSP_responMsg[a:server_job_id]
   unlet g:LSP_running_servers_job_id[a:server_job_id]
   if a:callback!=''
@@ -595,19 +601,19 @@ function! g:LSP_RegisterServer(server_info) abort
     return 'E001:Not enough parameters.'
   endif
 
-  let l:server_ = l:server_info['name']
+  let l:server_   = l:server_info['name']
   if !executable(l:server_)
-    let l:server_=l:server_info['server_location']
+    let l:server_ = l:server_info['server_location']
     if !executable(l:server_) 
       return 'E002:Failed to run ['.l:server_info['name'].']'
     endif
   endif
 
   let g:LSP_servers_info[l:server_info['name']]={
-        \'server_': l:server_,
-        \'whiteList': l:server_info['whiteList'],
+        \'server_':               l:server_,
+        \'whiteList':             l:server_info['whiteList'],
         \'InitializationOptions': l:server_info['InitializationOptions'],
-        \'cmd':     l:server_info['cmd']}
+        \'cmd':                   l:server_info['cmd']}
   return g:LSP_servers_info
   "}}}
 endfunction
@@ -615,8 +621,9 @@ function! LSP_StartServer(opts,callback) abort
   "{{{
   " start a server and send a initialize message to it.
   " the results of this function is up to init response message.
-  let l:opts=s:DicInit({'name':'0'},a:opts)
-  let l:callback=s:DicInit({'user_callback':'1',
+  let l:opts     = s:DicInit({'name':'0','rootUri':'1','workspaceFolders':'1',
+        \'trace':'1','processId':'1'},a:opts)
+  let l:callback = s:DicInit({'user_callback':'1',
         \'on_stderr':'1',
         \'on_exit':'1','on_stdout':'1'}
         \,a:callback)
@@ -633,9 +640,9 @@ function! LSP_StartServer(opts,callback) abort
         \ 'on_stderr': function('s:LSP_OnStderr'),
         \ 'on_exit':   function('s:LSP_OnExit'),
         \ }
-  let l:server_id = async#job#start(l:start_server.server_,l:start_opts)
+  let l:server_id  = async#job#start(l:start_server.cmd,l:start_opts)
 
-  if l:server_id==-1
+  if l:server_id  == -1
     call LSP_log("E006:Failed to start a job to run a server.")
     return 'E006:Failed to start a job to run a server.' .l:start_server.server_
   endif
@@ -647,7 +654,11 @@ function! LSP_StartServer(opts,callback) abort
         \}
   let g:LSP_running_servers_job_id[ l:server_id ]=l:start_opts
   let l:start_opts={'initializationOptions':g:LSP_servers_info
-        \[l:opts['name']]['InitializationOptions']}
+        \[l:opts['name']]['InitializationOptions'],
+        \'rootUri':l:opts['rootUri'],
+        \'processId':l:opts['processId'],
+        \'trace':l:opts['trace'],
+        \'workspaceFolders':l:opts['workspaceFolders']}
   call LSP_InitializeRequest(l:server_id,l:start_opts,
         \{'on_stdout':function('s:LSP_InitalizeResponseHandle'),
         \'user_callback':l:callback['user_callback']},
